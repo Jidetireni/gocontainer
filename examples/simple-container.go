@@ -1,37 +1,46 @@
 package main
 
 import (
-    "fmt"
-    "log"
-    "os"
-    "os/exec"
-    "path/filepath"
+	"fmt"
+	"gocontainer/src/container"
+	"log"
+	"os"
 )
 
 func main() {
-    containerRoot := "/path/to/container/root" // Set the path for the container root
-    if err := os.MkdirAll(containerRoot, 0755); err != nil {
-        log.Fatalf("Failed to create container root: %v", err)
-    }
+	// Create a new container with the specified rootfs
+	rootfs := "/rootfs"
 
-    // Example of setting up a simple container
-    if err := setupContainer(containerRoot); err != nil {
-        log.Fatalf("Failed to set up container: %v", err)
-    }
+	// Ensure rootfs exists (this should be created by debootstrap.sh)
+	if _, err := os.Stat(rootfs); os.IsNotExist(err) {
+		log.Fatalf("Root filesystem not found at %s. Run debootstrap.sh first.", rootfs)
+	}
 
-    fmt.Println("Container is set up and ready to run.")
-}
+	// Create a new container instance
+	c := container.NewContainer(rootfs)
 
-func setupContainer(root string) error {
-    // Change root filesystem
-    if err := os.Chroot(root); err != nil {
-        return fmt.Errorf("failed to chroot: %w", err)
-    }
+	// Setup the container (namespaces, cgroups)
+	if err := c.Setup(); err != nil {
+		log.Fatalf("Failed to setup container: %v", err)
+	}
 
-    // Execute a command inside the container
-    cmd := exec.Command("bash") // Replace with the command you want to run
-    cmd.Stdin = os.Stdin
-    cmd.Stdout = os.Stdout
-    cmd.Stderr = os.Stderr
-    return cmd.Run()
+	fmt.Println("Container is set up.")
+
+	// Start the container (performs chroot)
+	if err := c.Start(); err != nil {
+		log.Fatalf("Failed to start container: %v", err)
+	}
+
+	fmt.Println("Container is running.")
+
+	// Run a command in the container
+	command := "/bin/bash"
+	if len(os.Args) > 1 {
+		command = os.Args[1]
+	}
+
+	fmt.Printf("Running %s in the container\n", command)
+	if err := c.Exec(command, []string{}...); err != nil {
+		log.Fatalf("Failed to execute command in container: %v", err)
+	}
 }
