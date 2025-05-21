@@ -52,10 +52,48 @@ bash scripts/setup.sh
 
 ## Usage
 
-To run the container, use the following command:
+### Setting up the Environment
+
+First, set up the environment by creating the rootfs using debootstrap and configuring cgroups:
 
 ```bash
-go run src/main.go
+sudo make setup
+```
+
+### Building the Project
+
+Build the container implementation:
+
+```bash
+make build
+```
+
+### Running the Container
+
+Run a basic container with a shell:
+
+```bash
+sudo make run
+```
+
+Or run it manually with your own command:
+
+```bash
+sudo ./bin/gocontainer /bin/bash
+```
+
+### Examples
+
+Try the simple container example:
+
+```bash
+sudo make example-simple
+```
+
+Try the network namespace container example:
+
+```bash
+sudo make example-network
 ```
 
 You can also explore the examples provided in the `examples` directory to see how to create and manage containers with different configurations.
