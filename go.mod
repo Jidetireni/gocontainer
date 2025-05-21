@@ -1,5 +1,8 @@
-module github.com/Jidetireni/gocontainer
+module gocontainer
 
-go 1.24.2
+go 1.18
 
-require github.com/joho/godotenv v1.5.1 // indirect
+require (
+    github.com/opencontainers/runc v1.1.0
+    github.com/containerd/containerd v1.5.0
+)
